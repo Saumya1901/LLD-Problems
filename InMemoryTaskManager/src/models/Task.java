@@ -6,13 +6,13 @@ import java.util.UUID;
 
 public class Task {
     private final String taskId;
-    private String taskTitle;
-    private String taskDiscription;
-    private List<User> assingee;
-    private String creator;
-    private TaskStatus taskStatus;
+    private final String taskTitle;
+    private final String taskDiscription;
+    private String assingee;
+    private final String creator;
+    private final TaskStatus taskStatus;
 
-    public Task(TaskBuilder taskBuilder) {
+    private Task(TaskBuilder taskBuilder) {
         this.taskId = UUID.randomUUID().toString();
         this.taskTitle = taskBuilder.taskTitle;
         this.taskDiscription = taskBuilder.taskDiscription;
@@ -21,45 +21,63 @@ public class Task {
         this.taskStatus = TaskStatus.TODO;
     }
 
-    public void setTaskTitle(String taskTitle) {
-        this.taskTitle = taskTitle;
-    }
 
-    public void setTaskDiscription(String taskDiscription) {
-        this.taskDiscription = taskDiscription;
-    }
-
-    public void setAssingee(List<User> assingee) {
+    public void setAssingee(String assingee) {
         this.assingee = assingee;
     }
 
-    public void setCreator(String creator) {
-        this.creator = creator;
+
+    public String getTaskId() {
+        return taskId;
     }
 
-    public static class TaskBuilder{
+    public String getTaskTitle() {
+        return taskTitle;
+    }
+
+    public String getTaskDiscription() {
+        return taskDiscription;
+    }
+
+    public List<User> getAssingee() {
+        return assingee;
+    }
+
+    public String getCreator() {
+        return creator;
+    }
+
+    public TaskStatus getTaskStatus() {
+        return taskStatus;
+    }
+
+    public static class TaskBuilder {
         private String taskTitle;
         private String taskDiscription;
-        private List<User> assingee;
+        private String assingee;
         private String creator;
 
-        public void setTaskTitle(String taskTitle) {
+        public TaskBuilder setTaskTitle(String taskTitle) {
             this.taskTitle = taskTitle;
+            return this;
         }
 
-        public void setTaskDiscription(String taskDiscription) {
+        public TaskBuilder setTaskDiscription(String taskDiscription) {
             this.taskDiscription = taskDiscription;
+            return this;
         }
 
-        public void setAssingee(List<User> assingee) {
+        public TaskBuilder setAssingee(String assingee) {
             this.assingee = assingee;
+            return this;
         }
 
-        public void setCreator(String creator) {
+        public TaskBuilder setCreator(String creator) {
             this.creator = creator;
+            return this;
         }
 
-        public Task build(){
+        public Task build() {
             return new Task(this);
         }
     }

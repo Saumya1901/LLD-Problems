@@ -17,8 +17,15 @@ public class TaskService {
         User user = new User(name);
         usersById.put(user.getUserId(),user);
     }
-    public void createTask(){
-        //user builder pattern to create task
+    public void createTask(String taskTitle , String taskdisc, String creatorId,String assignee){
+        Task newTask = new Task.TaskBuilder().setTaskTitle(taskTitle).setTaskDiscription(taskdisc).setAssingee(assignee).setCreator(creatorId).build();
+        tasksById.put(newTask.getTaskId(), newTask);
+    }
+    public void addAssignee(String taskId,String assignee ){
+        Task task = tasksById.get(taskId);
+        task.setAssingee(assignee);
+        //are we mutitation the same objeccT?
+
     }
 
 }
