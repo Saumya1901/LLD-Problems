@@ -39,7 +39,7 @@ public class Task {
         return taskDiscription;
     }
 
-    public List<User> getAssingee() {
+    public String getAssingee() {
         return assingee;
     }
 
