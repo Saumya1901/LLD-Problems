@@ -39,7 +39,7 @@ class Room {
     }
 
     public TreeMap<LocalDateTime, Booking> getBookings() {
-        return bookings;
+        return new TreeMap<>(bookings);
     }
 
     public boolean canBook(LocalDateTime startTime, LocalDateTime endTime) {
@@ -55,9 +55,11 @@ class Room {
         bookings.remove(startTime, booking);
     }
 
-    public boolean hasBooking(LocalDateTime startTime, LocalDateTime endTime) {
-        if (bookings.containsKey(startTime) && bookings.get(startTime).getEndTime().isEqual(endTime)) return true;
-        return false;
+    public boolean hasBooking(Booking booking) {
+        Booking existing = bookings.get(booking.getStartTime());
+
+        return existing != null &&
+                existing.getBookingId().equals(booking.getBookingId());
     }
 }
 
@@ -93,15 +95,16 @@ class Booking {
 }
 
 class BookingService {
-    Map<String, Booking> bookingById = new HashMap<>();
+    Map<String, Booking> bookingById = new ConcurrentHashMap<>();
     Map<String, Room> getRoomById = new ConcurrentHashMap<>();
 
     public BookingService() {
     }
 
-    public void addRoom(int capacity) {
+    public String addRoom(int capacity) {
         Room room = new Room(capacity);
         getRoomById.computeIfAbsent(room.getRoomId(), k -> room);
+        return room.getRoomId();
 
     }
 
@@ -112,32 +115,36 @@ class BookingService {
                 if (room.getCapacity() >= capacity && room.canBook(startTime, endTime)) {
                     avlRooms.add(room);
                 }
-
             }
-
         }
         return avlRooms;
     }
-    public boolean bookRoom(Room room, LocalDateTime startTime, LocalDateTime endTime) {
-        if (!startTime.isBefore(endTime)) return false;
+    public String bookRoom(String roomId, LocalDateTime startTime, LocalDateTime endTime) {
+        if (!startTime.isBefore(endTime)) return null;
+        Room room = getRoomById.get(roomId);
         synchronized (room) {
             if (!room.canBook(startTime, endTime)) {
-                return false;
+                return null;
             }
             Booking booking = new Booking(startTime, endTime, room.getRoomId());
             room.addBooking(startTime, booking);
             bookingById.computeIfAbsent(booking.getBookingId(), k -> booking);
+            return booking.getBookingId();
+
         }
-        return true;
     }
 
     public boolean cancelBooking(String bookingId) {
         if (!bookingById.containsKey(bookingId)) return false;
-        Room room = getRoomById.get(bookingById.get(bookingId).getRoomId());
+        Booking booking1 = bookingById.get(bookingId);
+        if(booking1 == null)return false;
+        Room room = getRoomById.get(booking1.getRoomId());
+        if(room == null)return false;
+
         synchronized (room) {
-            if (!bookingById.containsKey(bookingId)) return false;
             Booking booking = bookingById.get(bookingId);
-            if (booking != null && room.hasBooking(booking.getStartTime(), booking.getEndTime())) {
+            if(booking!=booking1)return false;
+            if (room.hasBooking(booking)) {
                 //we can cancel the booking
                 bookingById.remove(bookingId, booking);
                 room.cancelBooking(booking.getStartTime(), booking);
