@@ -38,9 +38,9 @@ class Room {
         return capacity;
     }
 
-    public TreeMap<LocalDateTime, Booking> getBookings() {
-        return new TreeMap<>(bookings);
-    }
+//    public TreeMap<LocalDateTime, Booking> getBookings() {
+//        return new TreeMap<>(bookings);
+//    }//removed the defensive copy as someone can modify it
 
     public boolean canBook(LocalDateTime startTime, LocalDateTime endTime) {
         Booking prev = getPrevBooking(startTime);
@@ -122,6 +122,7 @@ class BookingService {
     public String bookRoom(String roomId, LocalDateTime startTime, LocalDateTime endTime) {
         if (!startTime.isBefore(endTime)) return null;
         Room room = getRoomById.get(roomId);
+        if(room == null)return null;
         synchronized (room) {
             if (!room.canBook(startTime, endTime)) {
                 return null;
@@ -165,14 +166,33 @@ class User {
     }
 }
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
+        BookingService service = new BookingService();
 
+        String roomId = service.addRoom(5);
 
+        LocalDateTime ten = LocalDateTime.of(2026, 11, 21, 10, 0);
+        LocalDateTime eleven = ten.plusHours(1);
+        LocalDateTime twelve = ten.plusHours(2);
+
+        String b1 = service.bookRoom(roomId, ten, eleven);
+        System.out.println("First booking: " + (b1 != null));
+
+        String overlap = service.bookRoom(
+                roomId, ten.plusMinutes(30), eleven.plusMinutes(30)
+        );
+        System.out.println("Overlap rejected: " + (overlap == null));
+
+        String b2 = service.bookRoom(roomId, eleven, twelve);
+        System.out.println("Adjacent booking: " + (b2 != null));
+
+        System.out.println("First cancellation: " + service.cancelBooking(b1));
+        System.out.println("Duplicate cancellation: " + service.cancelBooking(b1));
+
+        String b3 = service.bookRoom(roomId, ten, eleven);
+        System.out.println("Rebooking: " + (b3 != null));
+        System.out.println("Old cancellation rejected: " + !service.cancelBooking(b1));
     }
 }
 /*
