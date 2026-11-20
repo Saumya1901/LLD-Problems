@@ -3,47 +3,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-class MeetingRoomBookingSystem {
-    Map<String, Room> getRoomById = new ConcurrentHashMap<>();
-
-    BookingService bookingService = new BookingService(getRoomById);
-
-    MeetingRoomBookingSystem() {
-
-    }
-
-
-    public List<Room> getRooms(int capacity, LocalDateTime startTime, LocalDateTime endTime) {
-        List<Room> avlRooms = new ArrayList<>();
-        for (Room room : getRoomById.values()) {
-            synchronized (room) {
-                if (room.getCapacity() >= capacity && room.canBook(startTime, endTime)) {
-                    avlRooms.add(room);
-                }
-
-            }
-
-        }
-        return avlRooms;
-    }
-
-    public boolean bookRoom(Room room, LocalDateTime startTime, LocalDateTime endTime) {
-        if (!startTime.isBefore(endTime)) return false;
-        return bookingService.bookRoom(room, startTime, endTime);
-    }
-
-    public void addRoom(int capacity) {
-        Room room = new Room(capacity);
-        getRoomById.computeIfAbsent(room.getRoomId(), k -> room);
-
-    }
-
-    boolean cancelBooking(String bookingId) {
-        return bookingService.cancelBooking(bookingId);
-    }
-
-
-}
 
 class Room {
     private final String roomId;
@@ -135,14 +94,32 @@ class Booking {
 
 class BookingService {
     Map<String, Booking> bookingById = new HashMap<>();
-    Map<String, Room> getRoomById;
+    Map<String, Room> getRoomById = new ConcurrentHashMap<>();
 
-    public BookingService(Map<String, Room> getRoomById) {
-        this.getRoomById = getRoomById;
+    public BookingService() {
     }
 
-    public boolean bookRoom(Room room, LocalDateTime startTime, LocalDateTime endTime) {
+    public void addRoom(int capacity) {
+        Room room = new Room(capacity);
+        getRoomById.computeIfAbsent(room.getRoomId(), k -> room);
 
+    }
+
+    public List<Room> getRooms(int capacity, LocalDateTime startTime, LocalDateTime endTime) {
+        List<Room> avlRooms = new ArrayList<>();
+        for (Room room : getRoomById.values()) {
+            synchronized (room) {
+                if (room.getCapacity() >= capacity && room.canBook(startTime, endTime)) {
+                    avlRooms.add(room);
+                }
+
+            }
+
+        }
+        return avlRooms;
+    }
+    public boolean bookRoom(Room room, LocalDateTime startTime, LocalDateTime endTime) {
+        if (!startTime.isBefore(endTime)) return false;
         synchronized (room) {
             if (!room.canBook(startTime, endTime)) {
                 return false;
